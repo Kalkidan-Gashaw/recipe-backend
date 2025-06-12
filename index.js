@@ -25,19 +25,21 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/generate-recipe", async (req, res) => {
-  const { ingredients } = req.body;
+  const { ingredients, country } = req.body;
 
   if (!ingredients || ingredients.trim() === "") {
     return res.status(400).json({ error: "Ingredients are required." });
   }
+  if (!country || country.trim() === "") {
+    return res.status(400).json({ error: "Country is required." });
+  }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Updated model name
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    // Properly format the input
-    const result = await model.generateContent(
-      `Generate a recipe using the following ingredients: ${ingredients}`
-    );
+    const prompt = `Generate a ${country} recipe using the following ingredients: ${ingredients}`;
+
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = await response.text();
 
@@ -45,7 +47,6 @@ app.post("/generate-recipe", async (req, res) => {
   } catch (error) {
     console.error("Gemini API Error:", error);
 
-    // More detailed error handling
     let statusCode = 500;
     let errorMessage = "Failed to generate recipe.";
 
